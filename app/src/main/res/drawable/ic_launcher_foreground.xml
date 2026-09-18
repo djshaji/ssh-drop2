@@ -1,0 +1,49 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="54"
+        android:pivotY="54">
+        <!-- Main Folder Body -->
+        <path
+            android:fillColor="#1E293B"
+            android:pathData="M26,35 L44,35 L50,41 L82,41 C84.2,41 86,42.8 86,45 L86,75 C86,77.2 84.2,79 82,79 L26,79 C23.8,79 22,77.2 22,75 L22,39 C22,36.8 23.8,35 26,35 Z" />
+        
+        <!-- Folder Top Flap / Accent Line -->
+        <path
+            android:fillColor="#0284C7"
+            android:pathData="M24,42 L84,42 C85.1,42 86,42.9 86,44 L86,47 L22,47 L22,44 C22,42.9 22.9,42 24,42 Z" />
+        
+        <!-- Terminal / Transfer Box inside folder -->
+        <path
+            android:fillColor="#0F172A"
+            android:pathData="M27,47 L81,47 C82.1,47 83,47.9 83,49 L83,73 C83,74.1 82.1,75 81,75 L27,75 C25.9,75 25,74.1 25,73 L25,49 C25,47.9 25.9,47 27,47 Z" />
+        
+        <!-- SSH Terminal Prompt >_ -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#38BDF8"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M32,54 L38,59 L32,64" />
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#38BDF8"
+            android:strokeWidth="2.5"
+            android:strokeLineCap="round"
+            android:pathData="M41,64 L48,64" />
+
+        <!-- Up Transfer Arrow (Cyan) -->
+        <path
+            android:fillColor="#38BDF8"
+            android:pathData="M59,65 L59,57 L54,57 L63,48 L72,57 L67,57 L67,65 Z" />
+
+        <!-- Down Transfer Arrow (Teal) -->
+        <path
+            android:fillColor="#34D399"
+            android:pathData="M73,59 L73,67 L78,67 L69,76 L60,67 L65,67 L65,59 Z" />
+    </group>
+</vector>
