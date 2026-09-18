@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.VideoFile
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -163,18 +164,62 @@ fun RemoteItemRow(
                 tint = iconColor,
                 modifier = Modifier.size(22.dp)
             )
+            if (item.isSymlink) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(14.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(MaterialTheme.colorScheme.tertiary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Link,
+                        contentDescription = "Symlink",
+                        tint = MaterialTheme.colorScheme.onTertiary,
+                        modifier = Modifier.size(10.dp)
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (item.isSymlink) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "LINK",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                                RoundedCornerShape(3.dp)
+                            )
+                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                    )
+                }
+            }
+            if (item.isSymlink && !item.symlinkTarget.isNullOrEmpty()) {
+                Text(
+                    text = "➜ ${item.symlinkTarget}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (item.permissions.isNotEmpty()) {
                     Text(

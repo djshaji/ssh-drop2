@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import net.schmizz.sshj.sftp.FileMode
 import net.schmizz.sshj.sftp.SFTPClient
 import java.io.InputStream
 import java.io.OutputStream
@@ -514,37 +515,64 @@ class TransferEngine(
         val result = mutableListOf<RemoteTransferEntry>()
         val relPath = if (basePath.isEmpty()) rootItem.name else "$basePath/${rootItem.name}"
 
-        if (rootItem.isDirectory) {
+        var isDir = rootItem.isDirectory
+        var itemSize = rootItem.size
+        var targetRemotePath = rootItem.path
+
+        if (rootItem.isSymlink) {
+            try {
+                val stat = sftp.stat(rootItem.path)
+                isDir = stat.mode.type == FileMode.Type.DIRECTORY
+                itemSize = if (isDir) 0L else stat.size
+                targetRemotePath = sftp.canonicalize(rootItem.path)
+            } catch (_: Exception) {
+                // broken link or unreachable target
+            }
+        }
+
+        if (isDir) {
             result.add(
                 RemoteTransferEntry(
                     name = rootItem.name,
                     relativePath = relPath,
-                    remoteFullPath = rootItem.path,
+                    remoteFullPath = targetRemotePath,
                     size = 0L,
                     isDirectory = true
                 )
             )
-            val children = sftp.ls(rootItem.path)
-            for (child in children) {
-                if (child.name == "." || child.name == "..") continue
-                val isChildDir = child.isDirectory
-                val childItem = RemoteItem(
-                    name = child.name,
-                    path = child.path,
-                    isDirectory = isChildDir,
-                    size = if (isChildDir) 0L else child.attributes.size,
-                    permissions = "",
-                    lastModified = child.attributes.mtime * 1000L
-                )
-                result.addAll(collectRemoteFilesRecursively(sftp, childItem, relPath))
-            }
+            try {
+                val children = sftp.ls(targetRemotePath)
+                for (child in children) {
+                    if (child.name == "." || child.name == "..") continue
+                    val isChildSymlink = child.attributes.mode.type == FileMode.Type.SYMLINK
+                    var isChildDir = child.isDirectory
+                    var childSize = if (isChildDir) 0L else child.attributes.size
+                    if (isChildSymlink) {
+                        try {
+                            val cStat = sftp.stat(child.path)
+                            isChildDir = cStat.mode.type == FileMode.Type.DIRECTORY
+                            childSize = if (isChildDir) 0L else cStat.size
+                        } catch (_: Exception) {}
+                    }
+                    val childItem = RemoteItem(
+                        name = child.name,
+                        path = child.path,
+                        isDirectory = isChildDir,
+                        size = childSize,
+                        permissions = "",
+                        lastModified = child.attributes.mtime * 1000L,
+                        isSymlink = isChildSymlink
+                    )
+                    result.addAll(collectRemoteFilesRecursively(sftp, childItem, relPath))
+                }
+            } catch (_: Exception) {}
         } else {
             result.add(
                 RemoteTransferEntry(
                     name = rootItem.name,
                     relativePath = relPath,
-                    remoteFullPath = rootItem.path,
-                    size = rootItem.size,
+                    remoteFullPath = targetRemotePath,
+                    size = itemSize,
                     isDirectory = false
                 )
             )

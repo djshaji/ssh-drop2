@@ -94,7 +94,11 @@ class SshManager(
         }
     }
 
-    suspend fun listRemoteDirectory(remotePath: String, showHidden: Boolean = false): List<RemoteItem> =
+    suspend fun listRemoteDirectory(
+        remotePath: String,
+        showHidden: Boolean = false,
+        followSymlinks: Boolean = true
+    ): List<RemoteItem> =
         withContext(Dispatchers.IO) {
             val sftp = sftpClient ?: throw IllegalStateException("SFTP client is not connected")
             val rawItems = sftp.ls(remotePath)
@@ -103,18 +107,56 @@ class SshManager(
                 if (name == "." || name == "..") return@mapNotNull null
                 if (!showHidden && name.startsWith(".")) return@mapNotNull null
 
-                val isDir = item.isDirectory
+                val modeType = item.attributes.mode.type
+                val isSymlink = modeType == FileMode.Type.SYMLINK
+
+                var isDir = item.isDirectory
+                var itemSize = if (isDir) 0L else item.attributes.size
+                var symlinkTarget: String? = null
+
+                if (isSymlink) {
+                    try {
+                        symlinkTarget = sftp.readlink(item.path)
+                    } catch (_: Exception) {}
+
+                    if (followSymlinks) {
+                        try {
+                            val targetStat = sftp.stat(item.path)
+                            if (targetStat.mode.type == FileMode.Type.DIRECTORY) {
+                                isDir = true
+                                itemSize = 0L
+                            } else {
+                                isDir = false
+                                itemSize = targetStat.size
+                            }
+                        } catch (_: Exception) {
+                            // Target may be broken link or inaccessible, leave as is
+                        }
+                    }
+                }
+
                 val permissionsStr = formatFileMode(item.attributes.mode)
                 RemoteItem(
                     name = name,
                     path = item.path,
                     isDirectory = isDir,
-                    size = if (isDir) 0L else item.attributes.size,
+                    size = itemSize,
                     permissions = permissionsStr,
-                    lastModified = item.attributes.mtime * 1000L
+                    lastModified = item.attributes.mtime * 1000L,
+                    isSymlink = isSymlink,
+                    symlinkTarget = symlinkTarget
                 )
             }.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
         }
+
+    suspend fun canonicalizePath(remotePath: String): String = withContext(Dispatchers.IO) {
+        val sftp = sftpClient ?: throw IllegalStateException("SFTP client is not connected")
+        try {
+            sftp.canonicalize(remotePath)
+        } catch (_: Exception) {
+            remotePath
+        }
+    }
 
     suspend fun createDirectory(remotePath: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {

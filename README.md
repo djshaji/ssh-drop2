@@ -27,7 +27,8 @@
 - **Dual-Pane Browser Interface**:
   - Side-by-side or quick-toggle view between Android local storage and remote Linux filesystem.
   - Full remote directory management: folder creation (`mkdir`), item deletion, renaming, and hidden file toggle.
-  - POSIX file attribute and permission mask display (e.g. `drwxr-xr-x`).
+  - **Symlink Resolution & Following**: Accurately recognizes Linux symbolic links, displaying link badges, target paths (`➜ /path/to/target`), and following symlink directories seamlessly during navigation and recursive transfers with an optional toolbar toggle.
+  - POSIX file attribute and permission mask display (e.g. `lrwxrwxrwx`, `drwxr-xr-x`).
 - **Transfer Engine & Conflict Resolution**:
   - Real-time progress monitoring: transfer speed (MB/s), elapsed time, estimated time of arrival (ETA), and progress bars.
   - Recursive directory uploads and downloads preserving folder hierarchies.

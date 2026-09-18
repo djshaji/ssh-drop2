@@ -113,6 +113,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _showHiddenFiles = MutableStateFlow(false)
     val showHiddenFiles: StateFlow<Boolean> = _showHiddenFiles.asStateFlow()
 
+    private val _followSymlinks = MutableStateFlow(true)
+    val followSymlinks: StateFlow<Boolean> = _followSymlinks.asStateFlow()
+
     private val _isLoadingRemote = MutableStateFlow(false)
     val isLoadingRemote: StateFlow<Boolean> = _isLoadingRemote.asStateFlow()
 
@@ -329,7 +332,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isLoadingRemote.value = true
             try {
-                val list = sshManager.listRemoteDirectory(_currentRemotePath.value, _showHiddenFiles.value)
+                val list = sshManager.listRemoteDirectory(
+                    remotePath = _currentRemotePath.value,
+                    showHidden = _showHiddenFiles.value,
+                    followSymlinks = _followSymlinks.value
+                )
                 _remoteItems.value = list
                 _selectedRemoteItems.value = emptySet()
             } catch (e: Exception) {
@@ -345,10 +352,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refreshRemote()
     }
 
+    fun toggleFollowSymlinks() {
+        _followSymlinks.update { !it }
+        refreshRemote()
+    }
+
     fun navigateToRemoteSubdir(item: RemoteItem) {
         if (!item.isDirectory) return
-        _currentRemotePath.value = item.path
-        refreshRemote()
+        viewModelScope.launch {
+            val targetPath = if (item.isSymlink && _followSymlinks.value) {
+                sshManager.canonicalizePath(item.path)
+            } else {
+                item.path
+            }
+            _currentRemotePath.value = targetPath
+            refreshRemote()
+        }
     }
 
     fun navigateToRemoteParent() {

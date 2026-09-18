@@ -31,6 +31,8 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
@@ -108,6 +110,7 @@ fun DualBrowserScreen(
     val remoteItems by viewModel.remoteItems.collectAsStateWithLifecycle()
     val selectedRemoteItems by viewModel.selectedRemoteItems.collectAsStateWithLifecycle()
     val showHiddenFiles by viewModel.showHiddenFiles.collectAsStateWithLifecycle()
+    val followSymlinks by viewModel.followSymlinks.collectAsStateWithLifecycle()
     val isLoadingRemote by viewModel.isLoadingRemote.collectAsStateWithLifecycle()
 
     val grantedTreeUri by viewModel.grantedTreeUri.collectAsStateWithLifecycle()
@@ -415,6 +418,7 @@ fun DualBrowserScreen(
                         remoteItems = remoteItems,
                         selectedItems = selectedRemoteItems,
                         showHiddenFiles = showHiddenFiles,
+                        followSymlinks = followSymlinks,
                         isLoading = isLoadingRemote,
                         onNavigateToSubdir = { viewModel.navigateToRemoteSubdir(it) },
                         onNavigateUp = { viewModel.navigateToRemoteParent() },
@@ -423,6 +427,7 @@ fun DualBrowserScreen(
                         onSelectAll = { viewModel.selectAllRemoteItems() },
                         onClearSelection = { viewModel.clearRemoteSelection() },
                         onToggleHidden = { viewModel.toggleHiddenFiles() },
+                        onToggleFollowSymlinks = { viewModel.toggleFollowSymlinks() },
                         onCreateFolder = { showCreateDirDialog = true },
                         onDeleteSelected = { viewModel.deleteSelectedRemoteItems() },
                         onRename = { item ->
@@ -670,6 +675,7 @@ private fun RemoteBrowserPane(
     remoteItems: List<RemoteItem>,
     selectedItems: Set<RemoteItem>,
     showHiddenFiles: Boolean,
+    followSymlinks: Boolean,
     isLoading: Boolean,
     onNavigateToSubdir: (RemoteItem) -> Unit,
     onNavigateUp: () -> Unit,
@@ -678,6 +684,7 @@ private fun RemoteBrowserPane(
     onSelectAll: () -> Unit,
     onClearSelection: () -> Unit,
     onToggleHidden: () -> Unit,
+    onToggleFollowSymlinks: () -> Unit,
     onCreateFolder: () -> Unit,
     onDeleteSelected: () -> Unit,
     onRename: (RemoteItem) -> Unit,
@@ -788,6 +795,15 @@ private fun RemoteBrowserPane(
                                 imageVector = if (showHiddenFiles) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = "Toggle Hidden Files",
                                 tint = if (showHiddenFiles) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        IconButton(onClick = onToggleFollowSymlinks, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                imageVector = if (followSymlinks) Icons.Default.Link else Icons.Default.LinkOff,
+                                contentDescription = if (followSymlinks) "Follow Symlinks (Enabled)" else "Follow Symlinks (Disabled)",
+                                tint = if (followSymlinks) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
                         }

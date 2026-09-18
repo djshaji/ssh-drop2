@@ -46,4 +46,23 @@ class ExampleRobolectricTest {
         assertEquals("192.168.1.50", loaded?.host)
         assertEquals("ubuntu", loaded?.username)
     }
+
+    @Test
+    fun `remote item symlink properties verification`() {
+        val symlinkItem = com.example.ssh.RemoteItem(
+            name = "current_build",
+            path = "/var/www/current_build",
+            isDirectory = true,
+            size = 0L,
+            permissions = "lrwxrwxrwx",
+            lastModified = 1700000000000L,
+            isSymlink = true,
+            symlinkTarget = "/var/www/releases/v2.1.0"
+        )
+
+        assertEquals(true, symlinkItem.isSymlink)
+        assertEquals(true, symlinkItem.isDirectory)
+        assertEquals("/var/www/releases/v2.1.0", symlinkItem.symlinkTarget)
+        assertEquals("lrwxrwxrwx", symlinkItem.permissions)
+    }
 }

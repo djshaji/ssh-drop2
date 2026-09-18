@@ -8,7 +8,9 @@ data class RemoteItem(
     val isDirectory: Boolean,
     val size: Long,
     val permissions: String,
-    val lastModified: Long
+    val lastModified: Long,
+    val isSymlink: Boolean = false,
+    val symlinkTarget: String? = null
 )
 
 data class HostKeyVerificationRequest(
